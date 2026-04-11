@@ -83,7 +83,7 @@ class CaseRunner:
 
         if case.expect_invalid_args:
             return self.validator.validate_error_case(completed)
-        return self.validator.validate_regular_case(completed, int(case.args[0]))
+        return self.validator.validate_regular_case(completed, case.args)
 
     def get_last_output(self) -> str:
         if self.last_stdout.strip():

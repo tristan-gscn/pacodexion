@@ -37,6 +37,8 @@ class CaseRegistry:
             TestCase("error_arg8", "error_coder", ("10", "200", "300", "400", "500", "5", "10", "banana"), True),
             TestCase("error_arg9", "error_coder", ("10", "200", "300", "-400", "500", "5", "10", "edf"), True),
             TestCase("error_arg10", "error_coder", ("too", "10", "200", "300", "400", "500", "5", "10", "edf"), True),
+            TestCase("error_missing_args", "error_missing_args", ("10", "200", "300", "400", "500", "5", "10"), True),
+            TestCase("error_no_args", "error_no_args", (), True),
         ]
         return {case.key: case for case in cases}
 
