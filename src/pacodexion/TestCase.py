@@ -8,3 +8,4 @@ class TestCase:
     name: str
     args: Tuple[str, ...]
     expect_invalid_args: bool = False
+    expect_no_burnout: bool = False

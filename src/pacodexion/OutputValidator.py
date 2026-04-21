@@ -4,6 +4,8 @@ import re
 import subprocess
 from typing import Dict, List, Optional, Tuple
 
+from .TestCase import TestCase
+
 
 class OutputValidator:
     LOG_RE = re.compile(
@@ -31,8 +33,12 @@ class OutputValidator:
             f"stderr={self._preview(completed.stderr or '<empty>')}",
         )
 
-    def validate_regular_case(self, completed: subprocess.CompletedProcess[str], raw_args: Tuple[str, ...]) -> Tuple[bool, str]:
-        parsed_args, parse_error = self._parse_regular_args(raw_args)
+    def validate_regular_case(
+        self,
+        completed: subprocess.CompletedProcess[str],
+        case: TestCase,
+    ) -> Tuple[bool, str]:
+        parsed_args, parse_error = self._parse_regular_args(case.args)
         if parse_error is not None or parsed_args is None:
             return False, parse_error or "invalid test case definition"
 
@@ -234,6 +240,14 @@ class OutputValidator:
 
         if burnouts > 1:
             return False, f"multiple burned out events detected\ncount={burnouts}"
+
+        if case.expect_no_burnout and burnouts > 0:
+            return (
+                False,
+                "burnout is forbidden for this test case\n"
+                f"case_key={case.key}\n"
+                f"burnout_coder={burnout_coder}",
+            )
 
         if burnouts == 0:
             if compiles_required > 0:

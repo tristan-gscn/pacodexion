@@ -11,13 +11,13 @@ class CaseRegistry:
 
     def _build_cases(self) -> Dict[str, TestCase]:
         cases = [
-            TestCase("1", "basic_fifo", ("4", "800", "200", "200", "200", "5", "10", "fifo")),
-            TestCase("2", "basic_edf", ("4", "800", "200", "200", "200", "5", "10", "edf")),
-            TestCase("3", "success_fifo", ("10", "10000", "100", "100", "100", "5", "50", "fifo")),
-            TestCase("4", "large_edf", ("20", "5000", "500", "500", "500", "10", "100", "edf")),
-            TestCase("5", "low_cooldown", ("5", "2000", "100", "100", "100", "20", "1", "fifo")),
-            TestCase("6", "long_actions", ("3", "10000", "2000", "2000", "2000", "2", "100", "fifo")),
-            TestCase("big", "big_test", ("100", "10000", "66", "24", "87", "10", "10", "fifo")),
+            TestCase("1", "basic_fifo", ("4", "800", "200", "200", "200", "5", "10", "fifo"), expect_no_burnout=True),
+            TestCase("2", "basic_edf", ("4", "800", "200", "200", "200", "5", "10", "edf"), expect_no_burnout=True),
+            TestCase("3", "success_fifo", ("10", "10000", "100", "100", "100", "5", "50", "fifo"), expect_no_burnout=True),
+            TestCase("4", "large_edf", ("20", "5000", "500", "500", "500", "10", "100", "edf"), expect_no_burnout=True),
+            TestCase("5", "low_cooldown", ("5", "2000", "100", "100", "100", "20", "1", "fifo"), expect_no_burnout=True),
+            TestCase("6", "long_actions", ("3", "10000", "2000", "2000", "2000", "2", "100", "fifo"), expect_no_burnout=True),
+            TestCase("big", "big_test", ("100", "10000", "66", "24", "87", "10", "10", "fifo"), expect_no_burnout=True),
             TestCase("starvation", "starvation_case", ("3", "1000", "600", "10", "10", "5", "100", "fifo")),
             TestCase("starvation2", "starvation_case", ("3", "1000", "600", "10", "10", "5", "100", "edf")),
             TestCase("one_compiler_fifo", "one_compiler_fifo", ("1", "1000", "200", "200", "200", "5", "50", "fifo")),
