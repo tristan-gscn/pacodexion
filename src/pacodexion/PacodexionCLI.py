@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import subprocess
 import sys
 from typing import List, Sequence
 
@@ -47,6 +48,18 @@ class PacodexionCLI:
             action="store_true",
             help="Write traces for all cases in traces/ok and traces/ko.",
         )
+        parser.add_argument(
+            "-r",
+            "--raw",
+            action="store_true",
+            help="Print raw codexion output only (without OK/KO rendering).",
+        )
+        parser.add_argument(
+            "-c",
+            "--copy",
+            action="store_true",
+            help="Copy raw output to clipboard (requires -r and exactly one case).",
+        )
         return parser.parse_args(argv)
 
     def run(self, argv: Sequence[str]) -> int:
@@ -64,6 +77,23 @@ class PacodexionCLI:
         if not os.access(args.binary, os.X_OK):
             print(f"[FAIL] binary is not executable: {args.binary}", file=sys.stderr)
             return 2
+
+        if args.copy and not args.raw:
+            print("[FAIL] --copy requires --raw", file=sys.stderr)
+            return 2
+        if args.copy and len(selected) != 1:
+            print(
+                "[FAIL] --copy requires exactly one test key in arguments",
+                file=sys.stderr,
+            )
+            return 2
+        if args.raw:
+            return self._run_cases_raw(
+                args.binary,
+                selected,
+                args.timeout,
+                copy_to_clipboard=args.copy,
+            )
 
         results = self._run_cases_live(
             args.binary,
@@ -119,3 +149,74 @@ class PacodexionCLI:
             results.append((case, ok, detail))
 
         return results
+
+    def _run_cases_raw(
+        self,
+        binary: str,
+        selected: List[TestCase],
+        timeout: float,
+        *,
+        copy_to_clipboard: bool,
+    ) -> int:
+        raw_outputs: List[str] = []
+        several_cases = len(selected) > 1
+
+        for index, case in enumerate(selected):
+            self.runner.run_case_with_progress(binary, case, timeout, on_tick=None)
+            raw_output = self.runner.get_last_output()
+            raw_outputs.append(raw_output)
+
+            if several_cases:
+                print(f"=== {case.key} ({case.name}) ===")
+            if raw_output:
+                print(raw_output, end="" if raw_output.endswith("\n") else "\n")
+            if several_cases and index < len(selected) - 1:
+                print()
+
+        if copy_to_clipboard:
+            copy_error = self._copy_to_clipboard(raw_outputs[0])
+            if copy_error is not None:
+                print(f"[FAIL] {copy_error}", file=sys.stderr)
+                return 2
+            print(self._blue("\nLog copied to clipboard."))
+
+        return 0
+
+    def _blue(self, text: str) -> str:
+        if not self.use_color:
+            return text
+        return f"\033[34m{text}\033[0m"
+
+    def _copy_to_clipboard(self, text: str) -> str | None:
+        clipboard_commands = [
+            ["wl-copy"],
+            ["xclip", "-selection", "clipboard"],
+            ["xsel", "--clipboard", "--input"],
+            ["pbcopy"],
+            ["clip.exe"],
+        ]
+        for command in clipboard_commands:
+            try:
+                subprocess.run(
+                    command,
+                    input=text,
+                    text=True,
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE,
+                    timeout=1,
+                )
+                return None
+            except FileNotFoundError:
+                continue
+            except subprocess.TimeoutExpired:
+                # Some clipboard tools keep a helper process alive after data is
+                # transferred; treat timeout as copied to avoid false failures.
+                return None
+            except subprocess.CalledProcessError as exc:
+                stderr = (exc.stderr or "").strip()
+                if stderr:
+                    return f"clipboard copy failed with {command[0]}: {stderr}"
+                return f"clipboard copy failed with {command[0]}"
+        tried = ", ".join(command[0] for command in clipboard_commands)
+        return f"no clipboard utility found ({tried})"
