@@ -41,6 +41,12 @@ class PacodexionCLI:
             default=60.0,
             help="Per-test timeout in seconds (default: 60).",
         )
+        parser.add_argument(
+            "-a",
+            "--all-traces",
+            action="store_true",
+            help="Write traces for all cases in traces/ok and traces/ko.",
+        )
         return parser.parse_args(argv)
 
     def run(self, argv: Sequence[str]) -> int:
@@ -59,12 +65,24 @@ class PacodexionCLI:
             print(f"[FAIL] binary is not executable: {args.binary}", file=sys.stderr)
             return 2
 
-        results = self._run_cases_live(args.binary, selected, args.timeout)
+        results = self._run_cases_live(
+            args.binary,
+            selected,
+            args.timeout,
+            all_traces=args.all_traces,
+        )
         any_fail = any(not ok for _, ok, _ in results)
         print(self.formatter.render_summary(results))
         return 1 if any_fail else 0
 
-    def _run_cases_live(self, binary: str, selected: List[TestCase], timeout: float) -> List[tuple[TestCase, bool, str]]:
+    def _run_cases_live(
+        self,
+        binary: str,
+        selected: List[TestCase],
+        timeout: float,
+        *,
+        all_traces: bool,
+    ) -> List[tuple[TestCase, bool, str]]:
         results: List[tuple[TestCase, bool, str]] = []
         spinner_frames = ["|", "/", "-", "\\"]
 
@@ -88,8 +106,15 @@ class PacodexionCLI:
             if started_line and sys.stdout.isatty():
                 print("\r" + " " * 100 + "\r", end="")
             print(self.formatter.render_result(case, ok, detail))
-            if not ok:
-                trace_file = self.trace_writer.write(case, self.runner.get_last_output(), detail)
+            if all_traces or not ok:
+                subdir = ("ok" if ok else "ko") if all_traces else None
+                trace_file = self.trace_writer.write(
+                    case,
+                    self.runner.get_last_output(),
+                    detail,
+                    subdir=subdir,
+                    highlight_failure=not ok,
+                )
                 print(f"  trace: {trace_file}")
             results.append((case, ok, detail))
 
