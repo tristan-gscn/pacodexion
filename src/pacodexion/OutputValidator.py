@@ -138,8 +138,9 @@ class OutputValidator:
                         f"dongles_seen_before_compile={taken_counts[coder]}\n"
                         f"line_value={self._preview(line)}",
                     )
-                if last_refactor_start[coder] is not None:
-                    waited = ts - last_refactor_start[coder]
+                refactor_start = last_refactor_start[coder]
+                if refactor_start is not None:
+                    waited = ts - refactor_start
                     if waited < time_to_refactor:
                         return (
                             False,
@@ -289,7 +290,12 @@ class OutputValidator:
         parsed: List[int] = []
         for idx, value in enumerate(values, start=1):
             if not self._is_integer(value):
-                return None, f"invalid numeric argument in case definition\narg_index={idx}\nvalue={self._preview(value)}"
+                return (
+                    None,
+                    "invalid numeric argument in case definition\n"
+                    f"arg_index={idx}\n"
+                    f"value={self._preview(value)}",
+                )
             parsed.append(int(value))
 
         scheduler = raw_args[7]
@@ -300,11 +306,16 @@ class OutputValidator:
             return None, f"number_of_coders must be > 0\nvalue={parsed[0]}"
         if parsed[5] < 0:
             return None, f"number_of_compiles_required must be >= 0\nvalue={parsed[5]}"
-        for idx, value in enumerate(parsed[1:], start=2):
+        for idx, numeric_value in enumerate(parsed[1:], start=2):
             if idx == 6:
                 continue
-            if value < 0:
-                return None, f"time/cooldown arguments must be >= 0\narg_index={idx}\nvalue={value}"
+            if numeric_value < 0:
+                return (
+                    None,
+                    "time/cooldown arguments must be >= 0\n"
+                    f"arg_index={idx}\n"
+                    f"value={numeric_value}",
+                )
 
         return (parsed[0], parsed[1], parsed[2], parsed[3], parsed[4], parsed[5], parsed[6], scheduler), None
 

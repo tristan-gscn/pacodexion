@@ -54,5 +54,5 @@ class KoTraceWriter:
         prefix = f"{key}="
         for line in detail.splitlines():
             if line.startswith(prefix):
-                return line[len(prefix) :]
+                return line[len(prefix):]
         return None
