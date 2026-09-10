@@ -1,6 +1,6 @@
 UV ?= uv
 
-.PHONY: all build install run clean lint
+.PHONY: all build install run clean lint test
 
 all: build
 
@@ -9,14 +9,17 @@ build:
 
 install:
 	$(UV) venv
-	$(UV) pip install -e . flake8 mypy
+	$(UV) pip install -e . flake8 mypy pytest
 
 run:
 	$(UV) run pacodexion
 
+test:
+	$(UV) run pytest
+
 lint:
-	$(UV) run flake8 src
-	$(UV) run mypy --strict src
+	$(UV) run flake8 src tests
+	$(UV) run mypy --strict src tests
 
 clean:
 	find src -type d -name "__pycache__" -exec rm -r {} +
