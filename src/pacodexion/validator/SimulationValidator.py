@@ -20,13 +20,14 @@ class SimulationValidator:
         case: TestCase,
         logs: List[ParsedLog],
         params: Tuple[int, int, int, int, int, int, int],
+        initial_warnings: List[str] | None = None,
     ) -> ValidationResult:
         n, t_burn, t_comp, t_dbg, t_ref, n_comp, cd = params
         seq = StateSequenceTracker(n)
         dongles = DongleTracker(n, cd)
         actions = ActionDurationTracker(t_comp, t_dbg, t_ref, n)
         burn = BurnoutTracker(t_burn)
-        warnings: List[str] = []
+        warnings: List[str] = list(initial_warnings or [])
 
         for idx, log in enumerate(logs):
             err, warns = self._dispatch(log, seq, dongles, actions, burn, idx, logs)

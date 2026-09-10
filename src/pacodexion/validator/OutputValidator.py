@@ -40,9 +40,9 @@ class OutputValidator:
                 return ValidationResult(status="OK", detail="no log emitted (compiles_required=0)")
             return ValidationResult(status="KO", detail="empty output while compiles are required")
 
-        parsed_logs, parse_err = self.log_parser.parse_lines(raw_lines, n_coders)
+        parsed_logs, parse_err, parse_warnings = self.log_parser.parse_lines(raw_lines, n_coders)
         if parsed_logs is None:
             return parse_err or ValidationResult(status="KO", detail="parse error")
 
         params = (n_coders, t_burn, t_comp, t_dbg, t_ref, n_comp, cd)
-        return self.sim_validator.simulate(case, parsed_logs, params)
+        return self.sim_validator.simulate(case, parsed_logs, params, parse_warnings)

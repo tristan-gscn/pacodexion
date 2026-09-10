@@ -24,7 +24,7 @@ class StateSequenceTracker:
                 if curr == "has taken a dongle":
                     invalid = (count >= 2)
                 else:
-                    invalid = (curr != "is compiling")
+                    invalid = (curr != "is compiling" or count != 2)
             elif prev == "is compiling":
                 invalid = (curr != "is debugging")
             elif prev == "is debugging":
