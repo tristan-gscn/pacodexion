@@ -117,3 +117,35 @@ def test_dongle_cooldown_jitter_warn() -> None:
     assert result.status == "WARN"
     assert result.is_warn
     assert any("before cooldown expiration" in w for w in result.warnings)
+
+
+def test_non_monotonic_timestamp_warn_only_when_coherent() -> None:
+    validator = OutputValidator()
+    case = TestCase("t", "test", ("2", "1000", "10", "5", "5", "1", "0", "fifo"))
+    logs = (
+        "0 1 has taken a dongle\n"
+        "1 1 has taken a dongle\n"
+        "2 1 is compiling\n"
+        "12 1 is debugging\n"
+        "17 1 is refactoring\n"
+        "30 2 has taken a dongle\n"
+        "29 2 has taken a dongle\n"
+        "31 2 is compiling\n"
+        "41 2 is debugging\n"
+        "46 2 is refactoring\n"
+    )
+    result = validator.validate_regular_case(make_completed(logs), case)
+    assert result.status == "WARN"
+    assert any("non-monotonic timestamp in printed logs" in w for w in result.warnings)
+
+
+def test_compile_without_two_takes_is_invalid() -> None:
+    validator = OutputValidator()
+    case = TestCase("t", "test", ("2", "1000", "10", "5", "5", "1", "0", "fifo"))
+    logs = (
+        "0 1 has taken a dongle\n"
+        "1 1 is compiling\n"
+    )
+    result = validator.validate_regular_case(make_completed(logs), case)
+    assert result.status == "KO"
+    assert "invalid state transition sequence" in result.detail
