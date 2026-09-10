@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import sys
 from typing import Sequence
 
-from .PacodexionCLI import PacodexionCLI
+from .cli.PacodexionCLI import PacodexionCLI
 
 
 def main(argv: Sequence[str] | None = None) -> int:
