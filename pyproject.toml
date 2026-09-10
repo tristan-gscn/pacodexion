@@ -12,6 +12,20 @@ license = "MIT"
 authors = [{ name = "pacodexion" }]
 dependencies = []
 
+[project.optional-dependencies]
+dev = [
+    "flake8>=7.0.0",
+    "mypy>=1.9.0",
+    "pytest>=8.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "flake8>=7.0.0",
+    "mypy>=1.9.0",
+    "pytest>=8.0.0",
+]
+
 [project.scripts]
 pacodexion = "pacodexion.__main__:main"
 
